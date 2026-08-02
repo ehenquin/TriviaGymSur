@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#111722" />
+    <meta
+      name="description"
+      content="Trivia en equipos para la Peña de Gimnasio Sur."
+    />
+    <title>Trivia Gym Sur</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+
+  <body>
+    <div class="ambient ambient-one" aria-hidden="true"></div>
+    <div class="ambient ambient-two" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <button
+        id="brandBtn"
+        class="brand"
+        type="button"
+        aria-label="Volver al inicio"
+      >
+        <span class="brand-mark" aria-hidden="true">
+          <img src="assets/logo-gimnasio-sur.png" alt="" />
+        </span>
+        <span class="brand-copy">
+          <strong id="eventName">Trivia Gym Sur</strong>
+          <small>Peña · Juego por equipos</small>
+        </span>
+      </button>
+
+      <div class="topbar-actions">
+        <button
+          id="homeBtn"
+          class="button button-ghost button-compact hidden"
+          type="button"
+        >
+          Inicio
+        </button>
+
+        <div id="connectionPill" class="connection-pill" data-state="loading">
+          <span class="connection-dot" aria-hidden="true"></span>
+          <span id="connectionText">Conectando…</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-shell">
+      <!-- INICIO -->
+      <section id="homeView" class="view centered-view">
+        <article class="hero-card home-card">
+          <img
+            class="view-logo"
+            src="assets/logo-gimnasio-sur.png"
+            alt="Gimnasio Sur"
+          />
+
+          <div class="eyebrow">PEÑA GYM SUR</div>
+          <h1>Trivia en equipo</h1>
+          <p class="hero-copy">
+            Registrate, descubrí tu equipo y preparate para jugar junto a tus
+            compañeros.
+          </p>
+
+          <div class="home-actions">
+            <button
+              id="goRegister"
+              class="button button-primary button-large"
+              type="button"
+            >
+              Registrar participante
+            </button>
+
+            <button
+              id="goCaptain"
+              class="button button-secondary button-large"
+              type="button"
+            >
+              Entrar como capitán
+            </button>
+
+            <button
+              id="goAdmin"
+              class="button button-secondary button-large"
+              type="button"
+            >
+              Panel del organizador
+            </button>
+          </div>
+
+          <div class="home-stats" aria-label="Estado del evento">
+            <div>
+              <span>PARTICIPANTES</span>
+              <strong id="publicTotal">0</strong>
+            </div>
+            <div>
+              <span>EQUIPOS</span>
+              <strong>10</strong>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- REGISTRO -->
+      <section id="registerView" class="view centered-view hidden">
+        <article class="hero-card">
+          <img
+            class="view-logo"
+            src="assets/logo-gimnasio-sur.png"
+            alt="Gimnasio Sur"
+          />
+          <div class="eyebrow">REGISTRO DE PARTICIPANTES</div>
+          <h1>Ingresá tus datos</h1>
+          <p class="hero-copy">
+            La app te asignará automáticamente al equipo que tenga menos
+            integrantes.
+          </p>
+
+          <form id="registerForm" class="registration-form" autocomplete="off">
+            <label for="nameInput">Nombre</label>
+            <input
+              id="nameInput"
+              name="nombre"
+              type="text"
+              maxlength="60"
+              autocomplete="given-name"
+              placeholder="Ej.: Eduardo"
+              required
+            />
+
+            <label for="surnameInput">Apellido</label>
+            <input
+              id="surnameInput"
+              name="apellido"
+              type="text"
+              maxlength="60"
+              autocomplete="family-name"
+              placeholder="Ej.: Henquín"
+              required
+            />
+
+            <button
+              id="registerSubmit"
+              class="button button-primary button-large"
+              type="submit"
+            >
+              <span class="button-spinner" aria-hidden="true"></span>
+              <span id="registerSubmitText">Asignarme un equipo</span>
+            </button>
+          </form>
+        </article>
+      </section>
+
+      <!-- EQUIPO ASIGNADO -->
+      <section id="assignmentView" class="view centered-view hidden">
+        <article class="hero-card assignment-card">
+          <img
+            class="view-logo"
+            src="assets/logo-gimnasio-sur.png"
+            alt="Gimnasio Sur"
+          />
+          <div class="eyebrow">REGISTRO COMPLETADO</div>
+          <h1 id="assignedName">Participante</h1>
+          <p class="hero-copy assignment-intro">Te tocó:</p>
+
+          <div id="teamBadge" class="team-badge">EQUIPO 1</div>
+          <strong id="teamColorName" class="team-color-name">Rojo</strong>
+
+          <div id="captainAnnouncement" class="captain-announcement hidden">
+            <span class="captain-icon" aria-hidden="true">★</span>
+            <strong id="captainAnnouncementText">
+              ¡SOS EL CAPITÁN DEL EQUIPO 1!
+            </strong>
+            <span id="captainAnnouncementTeam">EQUIPO ROJO</span>
+            <small>
+              Vas a ser quien envíe las respuestas del equipo durante la trivia.
+            </small>
+          </div>
+
+          <p class="assignment-copy">
+            Recordá tu número y reunite con las demás personas de tu equipo.
+          </p>
+
+          <div class="stack-actions">
+            <button
+              id="registerAnother"
+              class="button button-primary button-large"
+              type="button"
+            >
+              Registrar otra persona
+            </button>
+            <button
+              id="assignmentHome"
+              class="button button-ghost"
+              type="button"
+            >
+              Volver al inicio
+            </button>
+          </div>
+        </article>
+      </section>
+
+      <!-- LOGIN CAPITAN -->
+      <section id="captainLoginView" class="view centered-view hidden">
+        <article class="hero-card admin-login-card">
+          <img
+            class="view-logo"
+            src="assets/logo-gimnasio-sur.png"
+            alt="Gimnasio Sur"
+          />
+          <div class="eyebrow">MODO CAPITÁN</div>
+          <h1>Acceso del capitán</h1>
+          <p class="hero-copy">
+            Entrá con tu equipo y tu nombre completo para responder en vivo.
+          </p>
+
+          <form id="captainLoginForm" class="registration-form" autocomplete="off">
+            <label for="captainTeamSelect">Equipo</label>
+            <select id="captainTeamSelect" name="equipo" required>
+              <option value="1">Equipo 1</option>
+              <option value="2">Equipo 2</option>
+              <option value="3">Equipo 3</option>
+              <option value="4">Equipo 4</option>
+              <option value="5">Equipo 5</option>
+              <option value="6">Equipo 6</option>
+              <option value="7">Equipo 7</option>
+              <option value="8">Equipo 8</option>
+              <option value="9">Equipo 9</option>
+              <option value="10">Equipo 10</option>
+            </select>
+
+            <label for="captainNameInput">Nombre y apellido</label>
+            <input
+              id="captainNameInput"
+              type="text"
+              maxlength="130"
+              autocomplete="name"
+              placeholder="Ej.: Eduardo Henquín"
+              required
+            />
+
+            <button class="button button-primary button-large" type="submit">
+              Entrar al juego
+            </button>
+          </form>
+        </article>
+      </section>
+
+      <!-- JUEGO CAPITAN -->
+      <section id="captainGameView" class="view hidden">
+        <div class="game-shell captain-shell">
+          <header class="game-topline">
+            <div>
+              <div id="captainTeamTitle" class="eyebrow">EQUIPO</div>
+              <h1 id="captainGameTitle">Esperando pregunta</h1>
+            </div>
+            <div class="captain-header-actions">
+              <button
+                id="captainRefreshBtn"
+                class="button button-secondary"
+                type="button"
+              >
+                Actualizar
+              </button>
+
+              <button
+                id="captainLogout"
+                class="button button-ghost"
+                type="button"
+              >
+                Salir del equipo
+              </button>
+            </div>
+          </header>
+
+          <div id="captainGameContent" class="live-card"></div>
+        </div>
+      </section>
+
+      <!-- LOGIN ADMIN -->
+      <section id="adminLoginView" class="view centered-view hidden">
+        <article class="hero-card admin-login-card">
+          <img
+            class="view-logo"
+            src="assets/logo-gimnasio-sur.png"
+            alt="Gimnasio Sur"
+          />
+          <div class="eyebrow">PANEL PRIVADO</div>
+          <h1>Organizador</h1>
+          <p class="hero-copy">
+            Ingresá el PIN configurado en la hoja
+            <strong>Configuracion</strong>.
+          </p>
+
+          <form
+            id="adminLoginForm"
+            class="registration-form"
+            autocomplete="off"
+          >
+            <label for="pinInput">PIN de administrador</label>
+            <input
+              id="pinInput"
+              type="password"
+              inputmode="numeric"
+              maxlength="12"
+              autocomplete="current-password"
+              placeholder="••••"
+              required
+            />
+
+            <button class="button button-primary button-large" type="submit">
+              Entrar al panel
+            </button>
+          </form>
+        </article>
+      </section>
+
+      <!-- PANEL ADMIN -->
+      <section id="adminView" class="view hidden">
+        <div class="admin-heading">
+          <div class="heading-title">
+            <img
+              class="heading-logo"
+              src="assets/logo-gimnasio-sur.png"
+              alt="Gimnasio Sur"
+            />
+            <div>
+              <div class="eyebrow">CONTROL CENTRAL</div>
+              <h1>Equipos registrados</h1>
+              <p class="muted">
+                Total: <strong id="adminTotal">0</strong> participantes
+              </p>
+            </div>
+          </div>
+
+          <div class="heading-actions">
+            <button
+              id="refreshBtn"
+              class="button button-secondary"
+              type="button"
+            >
+              Actualizar
+            </button>
+            <button id="resetBtn" class="button button-danger" type="button">
+              Vaciar registro
+            </button>
+          </div>
+        </div>
+
+        <section class="trivia-control live-card">
+          <div class="section-heading">
+            <div>
+              <div class="eyebrow">TRIVIA EN VIVO</div>
+              <h2>Control de trivia</h2>
+            </div>
+            <span id="adminGameStatus" class="status-chip">ESPERA</span>
+          </div>
+
+          <div class="question-picker">
+            <div class="field-group">
+              <label for="questionCategorySelect">Categoría</label>
+              <select id="questionCategorySelect">
+                <option value="">Todas las categorías</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label for="questionSearchInput">Buscar pregunta</label>
+              <input
+                id="questionSearchInput"
+                type="search"
+                placeholder="ID, categoría o texto de pregunta"
+              />
+            </div>
+
+            <div class="field-group">
+              <label for="questionSelect">Pregunta</label>
+              <select id="questionSelect"></select>
+            </div>
+          </div>
+
+          <article id="questionPreview" class="question-preview">
+            Seleccioná una pregunta activa.
+          </article>
+
+          <div class="control-actions">
+            <button id="launchQuestionBtn" class="button button-primary" type="button">
+              Lanzar pregunta
+            </button>
+            <button id="nextQuestionBtn" class="button button-secondary" type="button" disabled>
+              Siguiente pregunta
+            </button>
+            <button id="finishGameBtn" class="button button-danger" type="button">
+              Finalizar trivia
+            </button>
+            <button id="resetGameBtn" class="button button-ghost" type="button">
+              Reiniciar trivia
+            </button>
+          </div>
+
+          <div id="adminTimer" class="admin-timer hidden">
+            <span class="admin-timer-label">TIEMPO RESTANTE</span>
+            <strong id="adminTimerValue">20</strong>
+            <small>segundos</small>
+          </div>
+
+          <div id="adminLiveState" class="admin-live-state"></div>
+          <div id="answerChips" class="answer-chips"></div>
+          <div id="adminRanking" class="ranking-list"></div>
+        </section>
+
+        <div id="teamsGrid" class="teams-grid"></div>
+        <p id="updatedText" class="updated"></p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>Trivia Gym Sur</span>
+      <span>Peña · Organización de equipos</span>
+    </footer>
+
+    <div id="loading" class="loading hidden" role="status" aria-live="polite">
+      <div class="spinner" aria-hidden="true"></div>
+      <strong id="loadingText">Procesando…</strong>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <div id="appModal" class="app-modal hidden" aria-hidden="true">
+      <div class="app-modal-backdrop" data-modal-action="cancel"></div>
+      <section
+        class="app-modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="appModalTitle"
+      >
+        <div id="appModalIcon" class="app-modal-icon">!</div>
+        <h2 id="appModalTitle">Confirmar acción</h2>
+        <p id="appModalMessage">¿Estás seguro?</p>
+        <div class="app-modal-actions">
+          <button
+            id="appModalCancel"
+            class="button button-secondary"
+            type="button"
+          >
+            Cancelar
+          </button>
+          <button
+            id="appModalConfirm"
+            class="button button-danger"
+            type="button"
+          >
+            Confirmar
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
