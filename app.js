@@ -10,8 +10,8 @@
     currentView: "homeView",
     adminPin: "",
     adminAuthenticated: false,
-    adminTeamsTimer: null,
     adminTeamsBusy: false,
+    lastParticipantsVersion: null,
     adminPollTimer: null,
     adminClockTimer: null,
     adminPollingBusy: false,
@@ -63,17 +63,17 @@
     $("assignmentHome").addEventListener("click", goHome);
     $("captainLoginForm").addEventListener("submit", loginCaptain);
     $("captainLogout").addEventListener("click", logoutCaptain);
-    $("captainRefreshBtn").addEventListener(
-      "click",
-      forceRefreshCaptainGame,
-    );
+    $("captainRefreshBtn").addEventListener("click", forceRefreshCaptainGame);
     $("captainGameContent").addEventListener("click", handleCaptainGameClick);
     $("adminLoginForm").addEventListener("submit", loginAdmin);
     $("refreshBtn").addEventListener("click", () => loadAdminData(true));
     $("resetBtn").addEventListener("click", resetParticipants);
     $("teamsGrid").addEventListener("click", handleTeamAction);
 
-    $("questionCategorySelect").addEventListener("change", updateQuestionSelect);
+    $("questionCategorySelect").addEventListener(
+      "change",
+      updateQuestionSelect,
+    );
     $("questionSearchInput").addEventListener("input", updateQuestionSelect);
     $("questionSelect").addEventListener("change", renderQuestionPreview);
     $("launchQuestionBtn").addEventListener("click", launchSelectedQuestion);
@@ -100,25 +100,25 @@
     }, 8000);
 
     try {
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action, args }),
-      redirect: "follow",
-      cache: "no-store",
-      signal: controller.signal,
-    });
-    const text = await response.text();
-    if (!response.ok) {
-      throw new Error(`Error HTTP ${response.status}: ${text.slice(0, 180)}`);
-    }
-    try {
-      return JSON.parse(text);
-    } catch (_error) {
-      throw new Error(
-        `Apps Script devolvió una respuesta no válida: ${text.slice(0, 180)}`,
-      );
-    }
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action, args }),
+        redirect: "follow",
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      const text = await response.text();
+      if (!response.ok) {
+        throw new Error(`Error HTTP ${response.status}: ${text.slice(0, 180)}`);
+      }
+      try {
+        return JSON.parse(text);
+      } catch (_error) {
+        throw new Error(
+          `Apps Script devolvió una respuesta no válida: ${text.slice(0, 180)}`,
+        );
+      }
     } catch (error) {
       if (error && error.name === "AbortError") {
         throw new Error("La conexion tardo demasiado. Toca Actualizar.");
@@ -136,7 +136,9 @@
     try {
       const response = await callApi("getInitialData");
       if (!response?.ok)
-        throw new Error(response?.message || "No se pudo cargar la aplicación.");
+        throw new Error(
+          response?.message || "No se pudo cargar la aplicación.",
+        );
       $("eventName").textContent = response.nombreEvento || "Trivia Gym Sur";
       $("publicTotal").textContent = Number(response.total || 0);
       setConnection("online", "Conectado");
@@ -167,8 +169,12 @@
 
     setRegisterPending(true);
     try {
-      const response = await callApi("registerParticipant", { nombre, apellido });
-      if (!response?.ok) throw new Error(response?.message || "No se pudo registrar.");
+      const response = await callApi("registerParticipant", {
+        nombre,
+        apellido,
+      });
+      if (!response?.ok)
+        throw new Error(response?.message || "No se pudo registrar.");
       $("assignedName").textContent = response.participante.nombreCompleto;
       $("teamBadge").textContent = `EQUIPO ${response.equipo.numero}`;
       $("teamColorName").textContent = response.equipo.colorNombre;
@@ -281,9 +287,12 @@
         state.lastCaptainVersion,
         state.lastCaptainAnswerVersion,
       );
-      if (!response?.ok) throw new Error(response?.message || "No se pudo actualizar.");
+      if (!response?.ok)
+        throw new Error(response?.message || "No se pudo actualizar.");
       if (!response.changed) {
-        state.lastCaptainVersion = Number(response.version || state.lastCaptainVersion);
+        state.lastCaptainVersion = Number(
+          response.version || state.lastCaptainVersion,
+        );
         state.lastCaptainAnswerVersion = Number(
           response.answerVersion ?? state.lastCaptainAnswerVersion,
         );
@@ -299,7 +308,8 @@
       }
       state.lastCaptainVersion = Number(response.version || 0);
       state.lastCaptainAnswerVersion = Number(response.answerVersion || 0);
-      if (response.serverNowMs) state.serverOffsetMs = Number(response.serverNowMs) - Date.now();
+      if (response.serverNowMs)
+        state.serverOffsetMs = Number(response.serverNowMs) - Date.now();
       state.captainGameState = response;
       renderCaptainGame(response);
       startCaptainClock();
@@ -307,8 +317,13 @@
       perfLog("captain poll", t0);
       return true;
     } catch (error) {
-      if (immediate) showToast(error.message || "Sesión de capitán vencida.", true);
-      if (String(error.message || "").toLowerCase().includes("sesión")) {
+      if (immediate)
+        showToast(error.message || "Sesión de capitán vencida.", true);
+      if (
+        String(error.message || "")
+          .toLowerCase()
+          .includes("sesión")
+      ) {
         state.captainSession = null;
         localStorage.removeItem(CAPTAIN_SESSION_KEY);
       }
@@ -341,7 +356,9 @@
       }
 
       if (!response.changed) {
-        state.lastCaptainVersion = Number(response.version || state.lastCaptainVersion);
+        state.lastCaptainVersion = Number(
+          response.version || state.lastCaptainVersion,
+        );
         state.lastCaptainAnswerVersion = Number(
           response.answerVersion ?? state.lastCaptainAnswerVersion,
         );
@@ -372,7 +389,11 @@
       if (immediate) {
         showToast(error.message || "Sesion de capitan vencida.", true);
       }
-      if (String(error.message || "").toLowerCase().includes("sesion")) {
+      if (
+        String(error.message || "")
+          .toLowerCase()
+          .includes("sesion")
+      ) {
         state.captainSession = null;
         localStorage.removeItem(CAPTAIN_SESSION_KEY);
       }
@@ -499,7 +520,8 @@
 
   function titleForCaptainState(game) {
     if (game.estado === "FINALIZADA") return "Trivia finalizada";
-    if (game.estado === "PREGUNTA") return `Pregunta ${game.numeroPregunta || 0}`;
+    if (game.estado === "PREGUNTA")
+      return `Pregunta ${game.numeroPregunta || 0}`;
     if (game.estado === "RESULTADO") return "Resultado";
     if (game.estado === "RESPUESTAS_CERRADAS") return "Respuestas cerradas";
     return "Esperando pregunta";
@@ -535,9 +557,10 @@
         </button>
       `;
     });
-    const sent = game.respondida || state.optimisticAnswer || state.submittingAnswer
-      ? `<div class="sent-answer"><strong>${escapeHtml(state.optimisticStatus || "Respuesta enviada")}</strong><span>Tu equipo respondió ${escapeHtml(game.respuestaEquipo || state.optimisticAnswer)}.</span></div>`
-      : "";
+    const sent =
+      game.respondida || state.optimisticAnswer || state.submittingAnswer
+        ? `<div class="sent-answer"><strong>${escapeHtml(state.optimisticStatus || "Respuesta enviada")}</strong><span>Tu equipo respondió ${escapeHtml(game.respuestaEquipo || state.optimisticAnswer)}.</span></div>`
+        : "";
     return `
       <div class="question-meta">
         <span>Pregunta ${Number(game.numeroPregunta || 0)}</span>
@@ -582,7 +605,10 @@
   function secondsRemaining(game) {
     const end = Number(game?.fechaFinMs || 0);
     if (!end) return 0;
-    return Math.max(0, Math.ceil((end - (Date.now() + state.serverOffsetMs)) / 1000));
+    return Math.max(
+      0,
+      Math.ceil((end - (Date.now() + state.serverOffsetMs)) / 1000),
+    );
   }
 
   function renderCaptainResult(game) {
@@ -609,7 +635,9 @@
 
   function renderCaptainFinal(game) {
     const ranking = Array.isArray(game.ranking) ? game.ranking : [];
-    const mine = ranking.find((r) => Number(r.numero) === Number(game.equipo?.numero));
+    const mine = ranking.find(
+      (r) => Number(r.numero) === Number(game.equipo?.numero),
+    );
     const winner = ranking[0];
     const last = ranking[ranking.length - 1];
     return `
@@ -686,11 +714,17 @@
         };
       }
       state.optimisticStatus = "Respuesta registrada";
-      state.lastCaptainAnswerVersion = Number(response.answerVersion || state.lastCaptainAnswerVersion);
+      state.lastCaptainAnswerVersion = Number(
+        response.answerVersion || state.lastCaptainAnswerVersion,
+      );
       perfLog("submit answer", t0);
       renderCaptainGame(state.captainGameState);
     } catch (error) {
-      if (!String(error.message || "").toLowerCase().includes("ya respondió")) {
+      if (
+        !String(error.message || "")
+          .toLowerCase()
+          .includes("ya respondió")
+      ) {
         state.optimisticAnswer = "";
         state.optimisticStatus = "";
       } else {
@@ -734,10 +768,10 @@
 
   function openAdmin() {
     showView("adminView");
+    stopAdminTimers();
     loadQuestionBankOnce();
     loadAdminData(true);
     pollAdminGameState(true);
-    startAdminTimers();
   }
 
   async function loadQuestionBankOnce() {
@@ -748,7 +782,10 @@
     }
     try {
       const response = await callApi("getQuestionBank", state.adminPin);
-      if (!response?.ok) throw new Error(response?.message || "No se pudieron cargar preguntas.");
+      if (!response?.ok)
+        throw new Error(
+          response?.message || "No se pudieron cargar preguntas.",
+        );
       state.questionBank = response.preguntas || [];
       updateQuestionFilters();
       updateQuestionSelect();
@@ -765,49 +802,67 @@
     if (showOverlay) setLoading(true, "Actualizando equipos...");
     try {
       const response = await callApi("getAdminData", state.adminPin);
-      if (!response?.ok) throw new Error(response?.message || "No se pudo actualizar el panel.");
+      if (!response?.ok)
+        throw new Error(response?.message || "No se pudo actualizar el panel.");
+      const incomingParticipantsVersion = Number(response.participantesVersion);
+      if (Number.isFinite(incomingParticipantsVersion)) {
+        state.lastParticipantsVersion = incomingParticipantsVersion;
+      }
       $("adminTotal").textContent = Number(response.total || 0);
       $("publicTotal").textContent = Number(response.total || 0);
-      $("updatedText").textContent = `Última actualización: ${response.actualizado || "-"}`;
+      $("updatedText").textContent =
+        `Última actualización: ${response.actualizado || "-"}`;
       renderTeams(response.equipos || []);
       setConnection("online", "Conectado");
     } catch (error) {
-      setConnection("error", "Sin conexión");
-      showToast(error.message || "No se pudo actualizar el panel.", true);
-      console.error(error);
+      if (showOverlay) {
+        setConnection("error", "Sin conexión");
+        showToast(error.message || "No se pudo actualizar el panel.", true);
+      } else {
+        console.warn(
+          "[ADMIN] No se pudo refrescar la lista de equipos:",
+          error,
+        );
+      }
     } finally {
       if (showOverlay) setLoading(false);
       state.adminTeamsBusy = false;
     }
   }
 
-  function startAdminTimers() {
-    stopAdminTimers();
-    scheduleAdminTeamsRefresh();
-  }
-
   function stopAdminTimers() {
-    if (state.adminTeamsTimer) window.clearTimeout(state.adminTeamsTimer);
     if (state.adminPollTimer) window.clearTimeout(state.adminPollTimer);
     if (state.adminClockTimer) window.clearInterval(state.adminClockTimer);
-    state.adminTeamsTimer = null;
     state.adminPollTimer = null;
     state.adminClockTimer = null;
   }
 
-  function scheduleAdminTeamsRefresh() {
-    if (state.adminTeamsTimer) window.clearTimeout(state.adminTeamsTimer);
-    state.adminTeamsTimer = null;
-    if (state.currentView !== "adminView") return;
-    if (document.visibilityState !== "visible") return;
-    state.adminTeamsTimer = window.setTimeout(async () => {
-      await loadAdminData(false);
-      scheduleAdminTeamsRefresh();
-    }, 5000);
+  function detectParticipantsChange(response) {
+    const incomingVersion = Number(response?.participantesVersion);
+
+    if (!Number.isFinite(incomingVersion)) {
+      return;
+    }
+
+    if (state.lastParticipantsVersion === null) {
+      state.lastParticipantsVersion = incomingVersion;
+      return;
+    }
+
+    if (incomingVersion === state.lastParticipantsVersion) {
+      return;
+    }
+
+    if (state.adminTeamsBusy) {
+      return;
+    }
+
+    loadAdminData(false);
   }
 
   async function pollAdminGameState(showErrors) {
-    if (!state.adminAuthenticated || document.visibilityState !== "visible") return;
+    if (!state.adminAuthenticated || document.visibilityState !== "visible")
+      return;
     if (state.adminPollingBusy) return;
     state.adminPollingBusy = true;
     const t0 = performance.now();
@@ -818,9 +873,13 @@
         state.lastAdminVersion,
         state.lastAdminAnswerVersion,
       );
-      if (!response?.ok) throw new Error(response?.message || "No se pudo leer el estado.");
+      if (!response?.ok)
+        throw new Error(response?.message || "No se pudo leer el estado.");
+      detectParticipantsChange(response);
       if (!response.changed) {
-        state.lastAdminVersion = Number(response.version || state.lastAdminVersion);
+        state.lastAdminVersion = Number(
+          response.version || state.lastAdminVersion,
+        );
         state.lastAdminAnswerVersion = Number(
           response.answerVersion ?? state.lastAdminAnswerVersion,
         );
@@ -828,14 +887,16 @@
       }
       state.lastAdminVersion = Number(response.version || 0);
       state.lastAdminAnswerVersion = Number(response.answerVersion || 0);
-      if (response.serverNowMs) state.serverOffsetMs = Number(response.serverNowMs) - Date.now();
+      if (response.serverNowMs)
+        state.serverOffsetMs = Number(response.serverNowMs) - Date.now();
       state.usedQuestions = new Set(response.preguntasUsadas || []);
       renderAdminGameState(response);
       updateQuestionSelect(true);
       setConnection("online", "Conectado");
       perfLog("admin poll", t0);
     } catch (error) {
-      if (showErrors) showToast(error.message || "No se pudo actualizar la trivia.", true);
+      if (showErrors)
+        showToast(error.message || "No se pudo actualizar la trivia.", true);
       setConnection("error", "Sin conexión");
       console.error(error);
     } finally {
@@ -864,12 +925,17 @@
   function updateQuestionFilters() {
     const categories = new Map();
     state.questionBank.forEach((q) => {
-      if (q.categoria) categories.set(String(q.categoria), q.categoriaNombre || q.categoria);
+      if (q.categoria)
+        categories.set(String(q.categoria), q.categoriaNombre || q.categoria);
     });
     $("questionCategorySelect").innerHTML =
       '<option value="">Todas las categorías</option>' +
       Array.from(categories)
-        .sort((a, b) => Number(a[0]) - Number(b[0]) || String(a[1]).localeCompare(String(b[1])))
+        .sort(
+          (a, b) =>
+            Number(a[0]) - Number(b[0]) ||
+            String(a[1]).localeCompare(String(b[1])),
+        )
         .map(([id, name]) => {
           const label = `${id}) ${name}`;
           return `<option value="${escapeAttribute(id)}">${escapeHtml(label)}</option>`;
@@ -883,9 +949,7 @@
     const query = normalizeSearch($("questionSearchInput").value);
     state.filteredQuestions = state.questionBank.filter((q) => {
       const matchesCategory = !category || String(q.categoria) === category;
-      const haystack = normalizeSearch(
-        `${q.idPregunta} ${q.pregunta}`,
-      );
+      const haystack = normalizeSearch(`${q.idPregunta} ${q.pregunta}`);
       return matchesCategory && (!query || haystack.includes(query));
     });
     $("questionSelect").innerHTML = state.filteredQuestions
@@ -894,7 +958,10 @@
         return `<option value="${escapeAttribute(q.idPregunta)}">${escapeHtml(q.idPregunta)}${used}</option>`;
       })
       .join("");
-    if (selected && state.filteredQuestions.some((q) => q.idPregunta === selected)) {
+    if (
+      selected &&
+      state.filteredQuestions.some((q) => q.idPregunta === selected)
+    ) {
       $("questionSelect").value = selected;
     } else if (state.filteredQuestions.length) {
       $("questionSelect").value = state.filteredQuestions[0].idPregunta;
@@ -936,14 +1003,20 @@
     if (state.usedQuestions.has(q.idPregunta)) {
       const confirmed = await showAppConfirm({
         title: "Pregunta ya usada",
-        message: "Esta pregunta ya fue usada en la partida. ¿Querés lanzarla igual?",
+        message:
+          "Esta pregunta ya fue usada en la partida. ¿Querés lanzarla igual?",
         confirmText: "Lanzar igual",
         cancelText: "Elegir otra",
         type: "warning",
       });
       if (!confirmed) return;
     }
-    await runAdminGameAction("launchQuestion", q.idPregunta, "Pregunta lanzada.", "Lanzando...");
+    await runAdminGameAction(
+      "launchQuestion",
+      q.idPregunta,
+      "Pregunta lanzada.",
+      "Lanzando...",
+    );
   }
 
   function focusNextQuestionLegacy_() {
@@ -951,10 +1024,14 @@
     state.adminChoosingNext = true;
     $("adminGameStatus").textContent = "LISTO";
     $("adminTimer").classList.add("hidden");
-    $("adminLiveState").innerHTML = '<p class="muted">Seleccioná otra pregunta activa y presioná Lanzar pregunta.</p>';
+    $("adminLiveState").innerHTML =
+      '<p class="muted">Seleccioná otra pregunta activa y presioná Lanzar pregunta.</p>';
     $("answerChips").innerHTML = "";
     $("questionSelect").focus();
-    $("questionPreview").scrollIntoView({ behavior: "smooth", block: "center" });
+    $("questionPreview").scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
     showToast("Elegí otra pregunta y presioná Lanzar pregunta.");
   }
 
@@ -1039,7 +1116,10 @@
       </div>
     `;
     $("answerChips").innerHTML = "";
-    $("questionPreview").scrollIntoView({ behavior: "smooth", block: "center" });
+    $("questionPreview").scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
     showToast(`${nextQuestion.idPregunta} preparada.`);
   }
 
@@ -1052,13 +1132,19 @@
       type: "danger",
     });
     if (!confirmed) return;
-    await runAdminGameAction("finishGame", null, "Trivia finalizada.", "Finalizando...");
+    await runAdminGameAction(
+      "finishGame",
+      null,
+      "Trivia finalizada.",
+      "Finalizando...",
+    );
   }
 
   async function resetGame() {
     const first = await showAppConfirm({
       title: "Reiniciar trivia",
-      message: "Esto reinicia puntajes y estado de trivia, sin borrar participantes.",
+      message:
+        "Esto reinicia puntajes y estado de trivia, sin borrar participantes.",
       confirmText: "Continuar",
       cancelText: "Cancelar",
       type: "warning",
@@ -1072,7 +1158,12 @@
       type: "danger",
     });
     if (!second) return;
-    await runAdminGameAction("resetGame", null, "Trivia reiniciada.", "Reiniciando...");
+    await runAdminGameAction(
+      "resetGame",
+      null,
+      "Trivia reiniciada.",
+      "Reiniciando...",
+    );
   }
 
   async function runAdminGameAction(action, arg, successMessage, pendingText) {
@@ -1090,16 +1181,18 @@
         arg === null
           ? await callApi(action, state.adminPin)
           : await callApi(action, state.adminPin, arg);
-      if (!response?.ok) throw new Error(response?.message || "No se pudo ejecutar la acción.");
+      if (!response?.ok)
+        throw new Error(response?.message || "No se pudo ejecutar la acción.");
       showToast(successMessage);
-      state.lastAdminVersion = Number(response.version || state.lastAdminVersion);
+      state.lastAdminVersion = Number(
+        response.version || state.lastAdminVersion,
+      );
       state.lastAdminAnswerVersion = Number(
         response.answerVersion ?? state.lastAdminAnswerVersion,
       );
       state.usedQuestions = new Set(response.preguntasUsadas || []);
       renderAdminGameState(response);
       updateQuestionSelect(true);
-      await loadAdminData(false);
     } catch (error) {
       showToast(error.message || "No se pudo ejecutar la acción.", true);
       console.error(error);
@@ -1122,7 +1215,8 @@
     const q = game.pregunta;
     updateAdminTimer(game);
     if (!q) {
-      $("adminLiveState").innerHTML = '<p class="muted">Todavía no hay pregunta en juego.</p>';
+      $("adminLiveState").innerHTML =
+        '<p class="muted">Todavía no hay pregunta en juego.</p>';
     } else if (game.estado === "RESPUESTAS_CERRADAS") {
       $("adminLiveState").innerHTML = `
         <div class="live-state-main">
@@ -1152,7 +1246,8 @@
   function updateAdminTimer(game) {
     const timer = $("adminTimer");
     const value = $("adminTimerValue");
-    const active = game?.estado === "PREGUNTA" && Number(game.fechaFinMs || 0) > 0;
+    const active =
+      game?.estado === "PREGUNTA" && Number(game.fechaFinMs || 0) > 0;
     timer.classList.toggle("hidden", !active);
     if (!active) {
       stopAdminClock();
@@ -1178,11 +1273,19 @@
   }
 
   function renderAnswerChips(game) {
-    const closed = ["RESPUESTAS_CERRADAS", "RESULTADO", "FINALIZADA"].includes(game.estado);
+    const closed = ["RESPUESTAS_CERRADAS", "RESULTADO", "FINALIZADA"].includes(
+      game.estado,
+    );
     $("answerChips").innerHTML = (game.equipos || [])
       .map((team) => {
-        const status = team.respondio ? "answered" : closed ? "missed" : "pending";
-        const label = team.respondio ? `Equipo ${team.numero} ✓` : `Equipo ${team.numero} …`;
+        const status = team.respondio
+          ? "answered"
+          : closed
+            ? "missed"
+            : "pending";
+        const label = team.respondio
+          ? `Equipo ${team.numero} ✓`
+          : `Equipo ${team.numero} …`;
         return `<span class="answer-chip ${status}" style="--team-color:${escapeAttribute(team.color)}">${escapeHtml(label)}</span>`;
       })
       .join("");
@@ -1208,7 +1311,9 @@
   function renderTeams(teams) {
     $("teamsGrid").innerHTML = teams
       .map((team) => {
-        const participants = Array.isArray(team.participantes) ? team.participantes : [];
+        const participants = Array.isArray(team.participantes)
+          ? team.participantes
+          : [];
         const participantMarkup = participants.length
           ? participants.map(renderParticipant).join("")
           : '<div class="empty-team">Todavía no hay integrantes.</div>';
@@ -1258,8 +1363,13 @@
   async function setCaptain(participantId) {
     setLoading(true, "Actualizando capitán...");
     try {
-      const response = await callApi("setCaptain", state.adminPin, participantId);
-      if (!response?.ok) throw new Error(response?.message || "No se pudo actualizar.");
+      const response = await callApi(
+        "setCaptain",
+        state.adminPin,
+        participantId,
+      );
+      if (!response?.ok)
+        throw new Error(response?.message || "No se pudo actualizar.");
       showToast(response.message || "Capitán actualizado.");
       await loadAdminData(false);
     } catch (error) {
@@ -1281,8 +1391,13 @@
     if (!confirmed) return;
     setLoading(true, "Retirando participante...");
     try {
-      const response = await callApi("removeParticipant", state.adminPin, participantId);
-      if (!response?.ok) throw new Error(response?.message || "No se pudo retirar.");
+      const response = await callApi(
+        "removeParticipant",
+        state.adminPin,
+        participantId,
+      );
+      if (!response?.ok)
+        throw new Error(response?.message || "No se pudo retirar.");
       showToast(response.message || "Participante retirado.");
       await loadAdminData(false);
     } catch (error) {
@@ -1313,7 +1428,8 @@
     setLoading(true, "Vaciando registro...");
     try {
       const response = await callApi("resetParticipants", state.adminPin);
-      if (!response?.ok) throw new Error(response?.message || "No se pudo vaciar.");
+      if (!response?.ok)
+        throw new Error(response?.message || "No se pudo vaciar.");
       showToast(response.message || "Registro vacío.");
       await loadAdminData(false);
     } catch (error) {
@@ -1327,7 +1443,8 @@
   async function refreshPublicTotal() {
     try {
       const response = await callApi("getInitialData");
-      if (response?.ok) $("publicTotal").textContent = Number(response.total || 0);
+      if (response?.ok)
+        $("publicTotal").textContent = Number(response.total || 0);
     } catch (error) {
       console.error(error);
     }
@@ -1366,16 +1483,11 @@
         window.clearTimeout(state.adminPollTimer);
         state.adminPollTimer = null;
       }
-      if (state.adminTeamsTimer) {
-        window.clearTimeout(state.adminTeamsTimer);
-        state.adminTeamsTimer = null;
-      }
       return;
     }
     if (state.currentView === "captainGameView") pollCaptainGameState(false);
     if (state.currentView === "adminView") {
       pollAdminGameState(false);
-      scheduleAdminTeamsRefresh();
     }
   }
 
@@ -1394,7 +1506,9 @@
     button.disabled = active;
     button.setAttribute("aria-busy", active ? "true" : "false");
     button.classList.toggle("is-loading", active);
-    $("registerSubmitText").textContent = active ? "Asignando..." : "Asignarme un equipo";
+    $("registerSubmitText").textContent = active
+      ? "Asignando..."
+      : "Asignarme un equipo";
   }
 
   function applyAssignedTeamColor(hexColor) {
@@ -1404,7 +1518,10 @@
     const card = document.querySelector(".assignment-card");
     card.style.setProperty("--assigned-team-color", color);
     card.style.setProperty("--assigned-team-text-color", textColor);
-    card.style.setProperty("--assigned-team-glow-rgb", `${rgb.red}, ${rgb.green}, ${rgb.blue}`);
+    card.style.setProperty(
+      "--assigned-team-glow-rgb",
+      `${rgb.red}, ${rgb.green}, ${rgb.blue}`,
+    );
     $("teamBadge").style.removeProperty("background");
   }
 
@@ -1416,8 +1533,10 @@
     }
     const teamNumber = Number(response.equipo?.numero || 0);
     const colorName = String(response.equipo?.colorNombre || "").trim();
-    $("captainAnnouncementText").textContent = `¡SOS EL CAPITÁN DEL EQUIPO ${teamNumber}!`;
-    $("captainAnnouncementTeam").textContent = `EQUIPO ${colorName.toUpperCase()}`;
+    $("captainAnnouncementText").textContent =
+      `¡SOS EL CAPITÁN DEL EQUIPO ${teamNumber}!`;
+    $("captainAnnouncementTeam").textContent =
+      `EQUIPO ${colorName.toUpperCase()}`;
     announcement.classList.remove("hidden");
   }
 
@@ -1494,7 +1613,8 @@
       $("appModalConfirm").textContent = confirmText;
       $("appModalCancel").textContent = cancelText;
       $("appModalCancel").classList.remove("hidden");
-      $("appModalIcon").textContent = type === "danger" ? "!" : type === "success" ? "✓" : "i";
+      $("appModalIcon").textContent =
+        type === "danger" ? "!" : type === "success" ? "✓" : "i";
       window.setTimeout(() => $("appModalConfirm").focus(), 40);
     });
   }
