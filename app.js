@@ -5,6 +5,25 @@
     "https://script.google.com/macros/s/AKfycbygvSsokMuhVJDiuoItI7rNmxgqOYcAKlUQ_XYIBa20ekxC1nrmbx35tTl5rTQlJmIa/exec";
   const CAPTAIN_SESSION_KEY = "triviaGymSurCaptainSession";
   const DEBUG_PERFORMANCE = false;
+  const API_DEFAULT_TIMEOUT_MS = 8000;
+  const API_TIMEOUTS_MS = Object.freeze({
+    getInitialData: 20000,
+    verifyAdminPin: 12000,
+    getAdminData: 20000,
+    getQuestionBank: 15000,
+    registerParticipant: 25000,
+    setCaptain: 25000,
+    removeParticipant: 25000,
+    resetParticipants: 25000,
+    submitTeamAnswer: 25000,
+    launchQuestion: 25000,
+    closeCurrentQuestion: 25000,
+    revealCurrentAnswer: 25000,
+    finishGame: 25000,
+    resetGame: 25000,
+  });
+
+  let apiRequestSequence = 0;
 
   const state = {
     currentView: "homeView",
@@ -94,10 +113,15 @@
 
   async function callApi(action, ...args) {
     const controller = new AbortController();
+    const timeoutMs = API_TIMEOUTS_MS[action] || API_DEFAULT_TIMEOUT_MS;
+    const requestId = ++apiRequestSequence;
+    const timerLabel = `[API] ${action} #${requestId} total`;
+
+    console.time(timerLabel);
 
     const timeoutId = window.setTimeout(() => {
       controller.abort();
-    }, 8000);
+    }, timeoutMs);
 
     try {
       const response = await fetch(API_URL, {
@@ -127,6 +151,7 @@
       throw error;
     } finally {
       window.clearTimeout(timeoutId);
+      console.timeEnd(timerLabel);
     }
   }
 
@@ -678,23 +703,12 @@
     state.selectedAnswer = "";
     renderCaptainGame(game);
     try {
-      let response;
-      try {
-        response = await callApi(
-          "submitTeamAnswer",
-          state.captainSession.token,
-          game.pregunta.idPregunta,
-          answer,
-        );
-      } catch (firstError) {
-        await wait(250);
-        response = await callApi(
-          "submitTeamAnswer",
-          state.captainSession.token,
-          game.pregunta.idPregunta,
-          answer,
-        );
-      }
+      const response = await callApi(
+        "submitTeamAnswer",
+        state.captainSession.token,
+        game.pregunta.idPregunta,
+        answer,
+      );
       if (!response?.ok) {
         const message = response?.message || "No se pudo responder.";
         if (message.toLowerCase().includes("ya respondi")) {
